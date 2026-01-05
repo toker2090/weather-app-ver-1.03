@@ -11,6 +11,7 @@ const tempElement = document.getElementById('temperature');
 const tempMaxElement = document.getElementById('temp-max');
 const tempMinElement = document.getElementById('temp-min');
 const descElement = document.getElementById('description');
+const cityDisplayElement = document.getElementById('city-display');
 const iconElement = document.getElementById('weather-icon');
 
 // Details
@@ -30,6 +31,7 @@ const moonIconWrapper = document.getElementById('moon-icon-wrapper');
 // Astro
 const sunriseElement = document.getElementById('sunrise-time');
 const sunsetElement = document.getElementById('sunset-time');
+const moonsetElement = document.getElementById('moonset-time');
 
 const forecastContainer = document.getElementById('forecast-container');
 
@@ -485,6 +487,7 @@ function updateUI(weatherData, aqiData, cityName) {
     const code = current.weathercode;
     const isDay = current.is_day !== 0; // 1 is day, 0 is night
     descElement.textContent = translations[currentLang].weatherDesc[code] || 'Unknown';
+    if (cityDisplayElement) cityDisplayElement.textContent = cityName;
     // Use Font Awesome Class
     iconElement.className = getWeatherIconClass(code, isDay);
     iconElement.removeAttribute('src'); // Ensure no broken image icon
@@ -534,6 +537,9 @@ function updateUI(weatherData, aqiData, cityName) {
     // --- Astro Section ---
     sunriseElement.textContent = formatTime(daily.sunrise[0]);
     sunsetElement.textContent = formatTime(daily.sunset[0]);
+    if (moonsetElement && daily.moonset) {
+        moonsetElement.textContent = formatTime(daily.moonset[0]);
+    }
 
     // --- Warnings ---
     const alerts = generateWarnings(current, daily, hourly, hourIndex);
@@ -578,6 +584,12 @@ function updateForecast(hourlyData) {
 
         const dayGroup = document.createElement('div');
         dayGroup.className = 'day-group';
+
+        // Header for the day
+        const dayTitle = document.createElement('div');
+        dayTitle.className = 'day-title';
+        dayTitle.textContent = dayName;
+        dayGroup.appendChild(dayTitle);
         // Add Glassy Dark style explicitly if needed, but CSS handles it
 
 
@@ -1027,3 +1039,61 @@ function init() {
 }
 
 init();
+
+// --- Chat UI Logic ---
+const chatFab = document.getElementById('chat-fab');
+const chatWindow = document.getElementById('chat-window');
+const closeChatBtn = document.getElementById('close-chat');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const chatMessages = document.getElementById('chat-messages');
+
+function toggleChat() {
+    chatWindow.classList.toggle('hidden');
+    if (!chatWindow.classList.contains('hidden')) {
+        chatInput.focus();
+    }
+}
+
+function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Add user message
+    addMessage(text, 'user-message');
+    chatInput.value = '';
+
+    // Scroll to bottom
+    scrollToBottom();
+}
+
+function addMessage(text, className) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${className}`;
+    msgDiv.innerHTML = `<div class="message-content">${text}</div>`;
+    chatMessages.appendChild(msgDiv);
+}
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+if (chatFab) {
+    chatFab.addEventListener('click', toggleChat);
+}
+
+if (closeChatBtn) {
+    closeChatBtn.addEventListener('click', toggleChat);
+}
+
+if (sendBtn) {
+    sendBtn.addEventListener('click', sendMessage);
+}
+
+if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+}
